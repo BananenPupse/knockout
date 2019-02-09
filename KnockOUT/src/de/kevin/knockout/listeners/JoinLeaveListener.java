@@ -1,10 +1,6 @@
 package de.kevin.knockout.listeners;
 
-import java.util.Arrays;
-
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
@@ -14,11 +10,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import de.dytanic.cloudnet.bridge.CloudServer;
 import de.kevin.baupixel.mysql.API;
+import de.kevin.knockout.api.KitItems;
 import de.kevin.knockout.api.Messages;
 import de.kevin.knockout.api.MySQL;
 import de.kevin.knockout.commands.Arena;
@@ -59,15 +55,7 @@ public class JoinLeaveListener implements Listener {
 
 				p.getInventory().clear();
 
-				ItemStack chest = new ItemStack(Material.CHEST);
-				ItemMeta chestMeta = chest.getItemMeta();
-				chestMeta.setDisplayName("§6§lKits");
-				chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-				if (deutsch(p))
-					chestMeta.setLore(Arrays.asList(new String[] { "Rechtsklicke um dein Kit auszuwählen" }));
-				else
-					chestMeta.setLore(Arrays.asList(new String[] { "Rightclick to choose your Kit" }));
-				chest.setItemMeta(chestMeta);
+				ItemStack chest = KitItems.getKitsChest(p);
 				p.getInventory().setItem(4, chest);
 				p.teleport(Arena.getArenaSpawn());
 				for (Player player : Bukkit.getOnlinePlayers()) {

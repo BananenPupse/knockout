@@ -86,7 +86,7 @@ public class Main extends JavaPlugin {
 			getServer().getOnlinePlayers().forEach(player -> {
 				int kills = MySQL.getKills(player);
 				int tode = MySQL.getDeaths(player);
-				String kit = "Keines";
+				String kit = "wählen";
 				if (KitsChooseMenu.playerkit.containsKey(player)) {
 					switch (KitsChooseMenu.playerkit.get(player)) {
 					case "knockback+":
@@ -102,7 +102,7 @@ public class Main extends JavaPlugin {
 						kit = "Enterhaken";
 						break;
 					default:
-						kit = "Default";
+						kit = "Standart";
 						break;
 					}
 				}

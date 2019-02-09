@@ -16,7 +16,7 @@ public class NoAI {
 	private static Method setInt;
 	private static Method f;
 
-	public static void setAIEnabled(Entity entity, boolean enabled) {
+	public static void setAI(Entity entity, boolean enabled) {
 		try {
 			if (serverVersion == null) {
 				String name = Bukkit.getServer().getClass().getName();

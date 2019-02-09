@@ -40,13 +40,13 @@ public class Shop implements CommandExecutor, Listener{
 	
 	public static Inventory getShop(Player p) {
 		Inventory inv = Bukkit.createInventory(null, 9*2, "Shop");
-		inv.setItem(0, getSchneeballItem(p));
-		inv.setItem(1, getBogenItem(p));
-		inv.setItem(10, getPfeileItem(p));
+		inv.setItem(0, getSchneeballItemShop(p));
+		inv.setItem(1, getBogenItemShop(p));
+		inv.setItem(10, getPfeileItemShop(p));
 		return inv;
 	}
 	
-	static ItemStack getSchneeballItem(Player p) {
+	static ItemStack getSchneeballItemShop(Player p) {
 		ItemStack itm = new ItemStack(Material.SNOW_BALL);
 		ItemMeta meta = itm.getItemMeta();
 		if (deutsch(p))
@@ -60,8 +60,18 @@ public class Shop implements CommandExecutor, Listener{
 		itm.setItemMeta(meta);
 		return itm;
 	}
+	static ItemStack getSchneeballItem(Player p) {
+		ItemStack itm = new ItemStack(Material.SNOW_BALL);
+		ItemMeta meta = itm.getItemMeta();
+		if (deutsch(p))
+			meta.setDisplayName("§fSchneeball");
+		else
+			meta.setDisplayName("§fSnowball");
+		itm.setItemMeta(meta);
+		return itm;
+	}
 	
-	static ItemStack getBogenItem(Player p) {
+	static ItemStack getBogenItemShop(Player p) {
 		ItemStack itm = new ItemStack(Material.BOW);
 		ItemMeta meta = itm.getItemMeta();
 		meta.addEnchant(Enchantment.ARROW_KNOCKBACK, 1, true);
@@ -76,8 +86,19 @@ public class Shop implements CommandExecutor, Listener{
 		itm.setItemMeta(meta);
 		return itm;
 	}
-	
-	static ItemStack getPfeileItem(Player p) {
+	static ItemStack getBogenItem(Player p) {
+		ItemStack itm = new ItemStack(Material.BOW);
+		ItemMeta meta = itm.getItemMeta();
+		meta.addEnchant(Enchantment.ARROW_KNOCKBACK, 1, true);
+		if (deutsch(p))
+			meta.setDisplayName("§fMiesepeter");
+		else
+			meta.setDisplayName("§fMoaner");
+		itm.setItemMeta(meta);
+		return itm;
+	}
+
+	static ItemStack getPfeileItemShop(Player p) {
 		ItemStack itm = new ItemStack(Material.ARROW);
 		ItemMeta meta = itm.getItemMeta();
 		if (deutsch(p))
@@ -91,25 +112,35 @@ public class Shop implements CommandExecutor, Listener{
 		itm.setItemMeta(meta);
 		return itm;
 	}
+	static ItemStack getPfeileItem(Player p) {
+		ItemStack itm = new ItemStack(Material.ARROW);
+		ItemMeta meta = itm.getItemMeta();
+		if (deutsch(p))
+			meta.setDisplayName("§fPfeile");
+		else
+			meta.setDisplayName("§fArrows");
+		itm.setItemMeta(meta);
+		return itm;
+	}
 	
 	@EventHandler()
 	public void onShop(InventoryClickEvent e) {
 		Player p = (Player) e.getWhoClicked();
 		if (e.getCurrentItem() != null && e.getClickedInventory().getName().equals("Shop")) {
 			e.setCancelled(true);
-			if (e.getCurrentItem().isSimilar(getSchneeballItem(p))) {
+			if (e.getCurrentItem().isSimilar(getSchneeballItemShop(p))) {
 				if (MySQL.getCoins((Player) e.getWhoClicked()) >= 3) {
 					MySQL.addCoins((Player) e.getWhoClicked(), -3);
 					e.getWhoClicked().getInventory().addItem(getSchneeballItem(p));
 				}
 			}
-			if (e.getCurrentItem().isSimilar(getBogenItem(p))) {
+			if (e.getCurrentItem().isSimilar(getBogenItemShop(p))) {
 				if (MySQL.getCoins((Player) e.getWhoClicked()) >= 100) {
 					MySQL.addCoins((Player) e.getWhoClicked(), -100);
 					e.getWhoClicked().getInventory().addItem(getBogenItem(p));
 				}
 			}
-			if (e.getCurrentItem().isSimilar(getPfeileItem(p))) {
+			if (e.getCurrentItem().isSimilar(getPfeileItemShop(p))) {
 				if (MySQL.getCoins((Player) e.getWhoClicked()) >= 10) {
 					MySQL.addCoins((Player) e.getWhoClicked(), -10);
 					e.getWhoClicked().getInventory().addItem(getPfeileItem(p));

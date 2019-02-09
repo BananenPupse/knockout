@@ -1,7 +1,5 @@
 package de.kevin.knockout.commands;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,7 +13,6 @@ public class Stats implements CommandExecutor {
 		return p.spigot().getLocale().equals("de_DE") ? true : false;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command arg1, String arg2, String[] args) {
 		if (!(sender instanceof Player))
@@ -30,13 +27,13 @@ public class Stats implements CommandExecutor {
 					p.sendMessage("§7[§6KnockOUT§7] §4§lYou have reset your stats.");
 				return true;
 			}
-			OfflinePlayer player = Bukkit.getOfflinePlayer(args[0]);
+			String player = args[0];
 			int kills = MySQL.getKills(player), tode = MySQL.getDeaths(player), coins = MySQL.getCoins(player);
 			p.sendMessage("§7===========Stats===========");
 			if (deutsch(p))
-				p.sendMessage("§7Spieler: " + player.getName());
+				p.sendMessage("§7Spieler: " + player);
 			else
-				p.sendMessage("§7Player: " + player.getName());
+				p.sendMessage("§7Player: " + player);
 			p.sendMessage("§7Kills: " + kills);
 			if (deutsch(p))
 				p.sendMessage("§7Tode: " + tode);

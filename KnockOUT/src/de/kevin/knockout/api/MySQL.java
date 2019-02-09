@@ -6,7 +6,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -24,6 +26,7 @@ public class MySQL {
 	private static String host = "localhost", database = "knockout", username = "knockout", password = "KN0CK0UT_PW";
 	//private static String host = Main.getMain().getConfig().getString("host"), database = Main.getMain().getConfig().getString("database"), username = Main.getMain().getConfig().getString("user"), password = Main.getMain().getConfig().getString("password");
 	private static int port = 3306;
+	private static List<Player> buildingPlayers = new ArrayList<Player>();
 
 	public static Connection getConnection() {
 		return con;
@@ -48,6 +51,7 @@ public class MySQL {
 				Bukkit.getConsoleSender().sendMessage(Messages.prefix + "§aMySQL-Connection could be established!");
 			} catch (SQLException e) {
 				Bukkit.getConsoleSender().sendMessage(Messages.prefix + "§4§lMySQL-Connection couldn't be established!");
+				e.printStackTrace();
 				Bukkit.getConsoleSender().sendMessage(Messages.prefix + "§4§lThis plugin will be deactivated!");
 				Bukkit.getPluginManager().disablePlugin(Main.getMain());
 			}
@@ -72,12 +76,9 @@ public class MySQL {
 		if (isConnected()) {
 			try {
 				con.createStatement().executeUpdate(
-						"CREATE TABLE IF NOT EXISTS players(kills INT, tode INT, coins INT, points INT, kits VARCHAR(100), uuid VARCHAR(100) UNIQUE, playername VARCHAR(100))");
-				con.createStatement().executeUpdate(
-						"CREATE TABLE IF NOT EXISTS bannedplayers(uuid VARCHAR(100) UNIQUE, bannedby VARCHAR(100))");
-				con.createStatement().executeUpdate(
-						"CREATE TABLE IF NOT EXISTS buildingplayers(uuid VARCHAR(100) UNIQUE)");
+						"CREATE TABLE IF NOT EXISTS players(player LONGTEXT, kills INT, tode INT, coins INT, points INT, kits VARCHAR(100), uuid VARCHAR(100) UNIQUE, playername VARCHAR(100))");
 			} catch (SQLException e) {
+				System.out.println("Konnte MySQL Tabelle nicht erstellen:");
 				e.printStackTrace();
 			}
 		}
@@ -117,47 +118,13 @@ public class MySQL {
 		}
 	}
 
-	public static boolean isBanned(Player p) {
-		try {
-			PreparedStatement prepared = con.prepareStatement("SELECT * FROM bannedplayers WHERE uuid=?");
-			prepared.setString(1, p.getUniqueId().toString());
-			ResultSet resultSet = prepared.executeQuery();
-			boolean next = resultSet.next();
-			resultSet.close();
-			return next;
-		} catch (SQLException e) {
-			return false;
-		}
-	}
-
-	public static boolean isBuilding(Player p) {
-		try {
-			PreparedStatement prepared = con.prepareStatement("SELECT * FROM buildingplayers WHERE uuid=?");
-			prepared.setString(1, p.getUniqueId().toString());
-			ResultSet resultSet = prepared.executeQuery();
-			boolean next = resultSet.next();
-			resultSet.close();
-			return next;
-		} catch (SQLException e) {
-			return false;
-		}
-	}
-
-	public static void setBanned(Player p, boolean banned) {
-		if (banned && !isBanned(p)) {
-			update("INSERT INTO bannedplayers(uuid) VALUES (uuid='" + p.getUniqueId().toString() + "')");
-		} else {
-			update("DELETE FROM bannedplayers WHERE uuid='" + p.getUniqueId().toString() + "'");
-		}
-	}
-
 	public static void switchBuilding(Player p) {
 		if (isBuilding(p)) {
 			if (deutsch(p))
 				p.sendMessage("§7[§6KnockOUT§7] §cDu kannst nun nicht mehr bauen!");
 			else
 				p.sendMessage("§7[§6KnockOUT§7] §cYou cannot build anymore!");
-			update("DELETE FROM buildingplayers WHERE uuid='" + p.getUniqueId().toString() + "'");
+			buildingPlayers.remove(p);
 			p.setGameMode(GameMode.SURVIVAL);
 			return;
 		} else {
@@ -165,10 +132,14 @@ public class MySQL {
 				p.sendMessage("§7[§6KnockOUT§7] §aDu kannst nun bauen!");
 			else
 				p.sendMessage("§7[§6KnockOUT§7] §aYou can now build!");
-			update("INSERT INTO buildingplayers(uuid) VALUES ('" + p.getUniqueId().toString() + "')");
+			buildingPlayers.add(p);
 			p.setGameMode(GameMode.CREATIVE);
 			return;
 		}
+	}
+
+	public static boolean isBuilding(Player p) {
+		return buildingPlayers.contains(p);
 	}
 
 	public static void resetStats(Player p) {
@@ -245,7 +216,7 @@ public class MySQL {
 		if (playerExists(p))
 			setPlayername(p);
 		if (!playerExists(p))
-			update("INSERT INTO players(kills, tode, coins, points, kits, uuid, playername) VALUES (0, 0, 0, 0, 'standard;', '"
+			update("INSERT INTO players(player, kills, tode, coins, points, kits, uuid, playername) VALUES ('" + p + "',0, 0, 0, 0, 'standard;', '"
 					+ p.getUniqueId().toString() + "', '" + p.getName() + "')");
 	}
 
@@ -333,6 +304,48 @@ public class MySQL {
 		return 0;
 	}
 
+	public static int getKills(String playername) {
+		try {
+			ResultSet result = getResult("SELECT kills FROM players WHERE playername='" + playername + "'");
+			if (result.next()) {
+				int i = result.getInt(1);
+				result.close();
+				return i;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static int getDeaths(String playername) {
+		try {
+			ResultSet result = getResult("SELECT tode FROM players WHERE playername='" + playername + "'");
+			if (result.next()) {
+				int i = result.getInt(1);
+				result.close();
+				return i;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public static int getCoins(String playername) {
+		try {
+			ResultSet result = getResult("SELECT coins FROM players WHERE playername='" + playername + "'");
+			if (result.next()) {
+				int i = result.getInt(1);
+				result.close();
+				return i;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
 	public static void setPoint(Player p) {
 		int kills = 0, tode = 0, points = 0;
 		kills = getKills(p);
@@ -398,7 +411,7 @@ public class MySQL {
 	}
 
 	public static void setPlayername(Player p) {
-		update("UPDATE players SET playername='" + p.getName() + "' WHERE uuid='" +p.getUniqueId().toString() + "'");
+		update("UPDATE players SET playername='" + p.getName() + "' WHERE uuid='" + p.getUniqueId().toString() + "'");
 	}
 
 
@@ -457,6 +470,32 @@ public class MySQL {
 		} catch (SQLException e) {
 		}
 		return names;
+	}
+
+	public static Player getPlayer(String string, boolean isUUID) {
+		Player p = null;
+		if (!isUUID) {
+			try {
+				ResultSet result = getResult("SELECT player FROM players WHERE playername='" + username + "'");
+				if (result.next()) {
+					p = (Player) result.getObject(1);
+				}
+				result.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		} else {
+			try {
+				ResultSet result = getResult("SELECT player FROM players WHERE uuid='" + username + "'");
+				if (result.next()) {
+					p = (Player) result.getObject(1);
+				}
+				result.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return p;
 	}
 
 	public static boolean deutsch(Player p) {

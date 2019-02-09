@@ -34,14 +34,17 @@ public class Kits implements CommandExecutor {
 			return false;
 		}
 		p.getInventory().clear();
+		
 		ItemStack chest = new ItemStack(Material.CHEST);
 		ItemMeta chestMeta = chest.getItemMeta();
 		chestMeta.setDisplayName("§6§lKits");
 		chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
+		
 		if (deutsch(p))
 			chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
 		else
 			chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
+		
 		chest.setItemMeta(chestMeta);
 		p.getInventory().setItem(4, chest);
 		return false;

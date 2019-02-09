@@ -1,11 +1,9 @@
 package de.kevin.knockout.listeners;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,49 +11,32 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
+import de.kevin.knockout.api.KitItems;
 import de.kevin.knockout.api.MySQL;
 import de.kevin.knockout.main.Main;
 
-public class KitsChooseMenu implements Listener {
+public class KitsChooseMenu extends KitItems implements Listener {
 
 	public static boolean deutsch(Player p) {
 		return p.spigot().getLocale().equals("de_DE") ? true : false;
 	}
 
 	public static HashMap<Player, String> playerkit = new HashMap<>();
-
+	
 	@EventHandler
 	public void onChestClicked(PlayerInteractEvent e) {
 		Player p = e.getPlayer();
-		ItemStack chest = new ItemStack(Material.CHEST);
-		ItemMeta chestMeta = chest.getItemMeta();
-		chestMeta.setDisplayName("§6§lKits");
-		chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-		if (deutsch(p))
-			chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-		else
-			chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-		chest.setItemMeta(chestMeta);
-
-		ItemStack flieger1 = new ItemStack(Material.FEATHER);
-		ItemMeta flieger1Meta = flieger1.getItemMeta();
-		flieger1Meta.setDisplayName("§7Flieger");
-		if (deutsch(p))
-			flieger1Meta.setLore(
-					Arrays.asList("§4Preis: 700 Coins", "Rechtsklicke die Feder um für 3 Sekunden zu fliegen."));
-		else
-			flieger1Meta.setLore(
-					Arrays.asList("§4Price: 700 Coins", "Rightclick the feather to fly for 3 seconds."));
-		flieger1.setItemMeta(flieger1Meta);
+		ItemStack chest = getKitsChest(p);
+		ItemStack flieger = getFlieger(p);
+		
 		try {
 			if (e.getItem().isSimilar(chest)) {
 				e.setCancelled(true);
 				createKitsChooseInventory(p);
 			}
 
-			if (e.getItem().isSimilar(flieger1)) {
+			if (e.getItem().isSimilar(flieger)) {
 				p.setAllowFlight(true);
 				p.setFlying(true);
 				p.setItemInHand(new ItemStack(Material.AIR));
@@ -103,55 +84,16 @@ public class KitsChooseMenu implements Listener {
 	public static void createKitsChooseInventory(Player p) {
 		Inventory inv = Bukkit.createInventory(p, 9 * 1, "§6§lKits");
 
-		ItemStack stick = new ItemStack(Material.STICK);
-		ItemMeta stickMeta = stick.getItemMeta();
-		stickMeta.setDisplayName("§7Standard");
-		stickMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick.setItemMeta(stickMeta);
+		ItemStack stick = getStick(p);
+		ItemStack stickplus = getStickPlusShop(p);
+		ItemStack maurer = getMaurerShop(p);
+		ItemStack flieger = getFliegerShop(p);
+		ItemStack haken = getHakenShop(p);
+
 		inv.setItem(0, stick);
-
-		ItemStack stickplus = new ItemStack(Material.STICK);
-		ItemMeta stickplusMeta = stickplus.getItemMeta();
-		stickplusMeta.setDisplayName("§7Knockback+");
-		stickplusMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
-		if (deutsch(p))
-			stickplusMeta.setLore(Arrays.asList("§4Preis: 300 Coins"));
-		else
-			stickplusMeta.setLore(Arrays.asList("§4Price: 300 Coins"));
-		stickplus.setItemMeta(stickplusMeta);
 		inv.setItem(2, stickplus);
-
-		ItemStack maurer = new ItemStack(Material.BRICK);
-		ItemMeta maurerMeta = maurer.getItemMeta();
-		maurerMeta.setDisplayName("§7Maurer");
-		maurer.setAmount(32);
-		if (deutsch(p))
-			maurerMeta.setLore(Arrays.asList("§4Preis: 500 Coins"));
-		else
-			maurerMeta.setLore(Arrays.asList("§4Price: 500 Coins"));
-		maurer.setItemMeta(maurerMeta);
 		inv.setItem(4, maurer);
-
-		ItemStack flieger = new ItemStack(Material.FEATHER);
-		ItemMeta fliegerMeta = flieger.getItemMeta();
-		fliegerMeta.setDisplayName("§7Flieger");
-		if (deutsch(p))
-			fliegerMeta.setLore(
-					Arrays.asList("§4Preis: 700 Coins", "Rechtsklicke die Feder um für 3 Sekunden zu fliegen."));
-		else
-			fliegerMeta.setLore(
-					Arrays.asList("§4Price: 700 Coins", "Rightclick the feather to fly for 3 seconds."));
-		flieger.setItemMeta(fliegerMeta);
 		inv.setItem(6, flieger);
-		
-		ItemStack haken = new ItemStack(Material.FISHING_ROD);
-		ItemMeta hakenMeta = haken.getItemMeta();
-		hakenMeta.setDisplayName("§7Enterhaken");
-		if (deutsch(p))
-			hakenMeta.setLore(Arrays.asList("§4Preis: 900 Coins"));
-		else
-			hakenMeta.setLore(Arrays.asList("§4Price: 900 Coins"));
-		haken.setItemMeta(hakenMeta);
 		inv.setItem(8, haken);
 
 		p.openInventory(inv);
@@ -160,67 +102,27 @@ public class KitsChooseMenu implements Listener {
 	@EventHandler
 	public void onKitClicked(InventoryClickEvent e) {
 		Player p = (Player) e.getWhoClicked();
+		// Alle Kits aus dem Kits Inventar
+		ItemStack stickplusShop = getStickPlusShop(p);
+		ItemStack maurerShop = getMaurerShop(p);
+		ItemStack fliegerShop = getFliegerShop(p);
+		ItemStack hakenShop = getHakenShop(p);
+		
 		// Standard
-		ItemStack stick = new ItemStack(Material.STICK);
-		ItemMeta stickMeta = stick.getItemMeta();
-		stickMeta.setDisplayName("§7Standard");
-		stickMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick.setItemMeta(stickMeta);
+		ItemStack stick = getStick(p);
 		// Knockback+
-		ItemStack stickplus = new ItemStack(Material.STICK);
-		ItemMeta stickplusMeta = stickplus.getItemMeta();
-		stickplusMeta.setDisplayName("§7Knockback+");
-		stickplusMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
-		if (deutsch(p))
-			stickplusMeta.setLore(Arrays.asList("§4Preis: 300 Coins"));
-		else
-			stickplusMeta.setLore(Arrays.asList("§4Price: 300 Coins"));
-		stickplus.setItemMeta(stickplusMeta);
+		ItemStack stickplus = getStickPlus(p);
 		// Maurer
-		ItemStack maurer = new ItemStack(Material.BRICK);
-		ItemMeta maurerMeta = maurer.getItemMeta();
-		maurerMeta.setDisplayName("§7Maurer");
-		maurer.setAmount(32);
-		if (deutsch(p))
-			maurerMeta.setLore(Arrays.asList("§4Preis: 500 Coins"));
-		else
-			maurerMeta.setLore(Arrays.asList("§4Price: 500 Coins"));
-		maurer.setItemMeta(maurerMeta);
-		ItemStack stick2 = new ItemStack(Material.STICK);
-		ItemMeta stick2Meta = stick2.getItemMeta();
-		stick2Meta.setDisplayName("§7Maurerkelle");
-		stick2Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick2.setItemMeta(stick2Meta);
+		ItemStack maurer = getMaurer(p);
+		ItemStack stick2 = getMaurerStick(p);
 		// Flieger
-		ItemStack flieger = new ItemStack(Material.FEATHER);
-		ItemMeta fliegerMeta = flieger.getItemMeta();
-		fliegerMeta.setDisplayName("§7Flieger");
-		if (deutsch(p))
-			fliegerMeta.setLore(
-					Arrays.asList("§4Preis: 700 Coins", "Rechtsklicke die Feder um für 3 Sekunden zu fliegen."));
-		else
-			fliegerMeta.setLore(
-					Arrays.asList("§4Price: 700 Coins", "Rightclick the feather to fly for 3 seconds."));
-		flieger.setItemMeta(fliegerMeta);
-		ItemStack stick3 = new ItemStack(Material.STICK);
-		ItemMeta stick3Meta = stick3.getItemMeta();
-		stick3Meta.setDisplayName("§7Vogelbein");
-		stick3Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick3.setItemMeta(stick3Meta);
+		ItemStack flieger = getFlieger(p);
+		ItemStack stick3 = getFliegerStick(p);
 		// Enterhaken
-		ItemStack haken = new ItemStack(Material.FISHING_ROD);
-		ItemMeta hakenMeta = haken.getItemMeta();
-		hakenMeta.setDisplayName("§7Enterhaken");
-		if (deutsch(p))
-			hakenMeta.setLore(Arrays.asList("§4Preis: 900 Coins"));
-		else
-			hakenMeta.setLore(Arrays.asList("§4Price: 900 Coins"));
-		haken.setItemMeta(hakenMeta);
-		ItemStack stick4 = new ItemStack(Material.STICK);
-		ItemMeta stick4Meta = stick4.getItemMeta();
-		stick4Meta.setDisplayName("§7Enterhaken Kit");
-		stick4Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick4.setItemMeta(stick4Meta);
+		ItemStack haken = getHaken(p);
+		ItemStack stick4 = getHakenStick(p);
+		
+		
 		if (e.getClickedInventory().getName().equals("§6§lKits")) {
 			e.setCancelled(true);
 			// Standard
@@ -236,7 +138,7 @@ public class KitsChooseMenu implements Listener {
 			}
 
 			// Knockback+
-			if (e.getCurrentItem().isSimilar(stickplus)) {
+			if (e.getCurrentItem().isSimilar(stickplusShop)) {
 				if (MySQL.hasKitAccess(p, "knockback+")) {
 					if (deutsch(p))
 						e.getWhoClicked().sendMessage("§7[§6KnockOUT§7] §6Du hast das Kit §7Knockback+ §6gewählt.");
@@ -270,7 +172,7 @@ public class KitsChooseMenu implements Listener {
 			}
 
 			// Maurer
-			if (e.getCurrentItem().isSimilar(maurer)) {
+			if (e.getCurrentItem().isSimilar(maurerShop)) {
 				if (MySQL.hasKitAccess(p, "maurer")) {
 					if (deutsch(p))
 						e.getWhoClicked().sendMessage("§7[§6KnockOUT§7] §6Du hast das Kit §7Maurer §6gewählt.");
@@ -306,7 +208,7 @@ public class KitsChooseMenu implements Listener {
 			}
 
 			// Flieger
-			if (e.getCurrentItem().isSimilar(flieger)) {
+			if (e.getCurrentItem().isSimilar(fliegerShop)) {
 				if (MySQL.hasKitAccess(p, "flieger")) {
 					if (deutsch(p))
 						e.getWhoClicked().sendMessage("§7[§6KnockOUT§7] §6Du hast das Kit §7Flieger §6gewählt.");
@@ -342,7 +244,7 @@ public class KitsChooseMenu implements Listener {
 			}
 
 			// Enterhaken
-			if (e.getCurrentItem().isSimilar(haken)) {
+			if (e.getCurrentItem().isSimilar(hakenShop)) {
 				if (MySQL.hasKitAccess(p, "enterhaken")) {
 					if (deutsch(p))
 						e.getWhoClicked().sendMessage("§7[§6KnockOUT§7] §6Du hast das Kit §7Enterhaken §6gewählt.");
@@ -385,79 +287,23 @@ public class KitsChooseMenu implements Listener {
 			kit = playerkit.get(p);
 		} catch (Exception e) {
 			p.getInventory().clear();
-			ItemStack chest = new ItemStack(Material.CHEST);
-			ItemMeta chestMeta = chest.getItemMeta();
-			chestMeta.setDisplayName("§6§lKits");
-			chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-			if (deutsch(p))
-				chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-			else
-				chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-			chest.setItemMeta(chestMeta);
+			ItemStack chest = getKitsChest(p);
 			p.getInventory().setItem(4, chest);
 			return;
 		}
 		// Standard
-		ItemStack stick = new ItemStack(Material.STICK);
-		ItemMeta stickMeta = stick.getItemMeta();
-		stickMeta.setDisplayName("§7Standard");
-		stickMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick.setItemMeta(stickMeta);
+		ItemStack stick = getStick(p);
 		// Knockback+
-		ItemStack stickplus = new ItemStack(Material.STICK);
-		ItemMeta stickplusMeta = stickplus.getItemMeta();
-		stickplusMeta.setDisplayName("§7Knockback+");
-		stickplusMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
-		if (deutsch(p))
-			stickplusMeta.setLore(Arrays.asList("§4Preis: 300 Coins"));
-		else
-			stickplusMeta.setLore(Arrays.asList("§4Price: 300 Coins"));
-		stickplus.setItemMeta(stickplusMeta);
+		ItemStack stickplus = getStickPlus(p);
 		// Maurer
-		ItemStack maurer = new ItemStack(Material.BRICK);
-		ItemMeta maurerMeta = maurer.getItemMeta();
-		maurerMeta.setDisplayName("§7Maurer");
-		maurer.setAmount(32);
-		if (deutsch(p))
-			maurerMeta.setLore(Arrays.asList("§4Preis: 500 Coins"));
-		else
-			maurerMeta.setLore(Arrays.asList("§4Price: 500 Coins"));
-		maurer.setItemMeta(maurerMeta);
-		ItemStack stick2 = new ItemStack(Material.STICK);
-		ItemMeta stick2Meta = stick2.getItemMeta();
-		stick2Meta.setDisplayName("§7Maurerkelle");
-		stick2Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick2.setItemMeta(stick2Meta);
+		ItemStack maurer = getMaurer(p);
+		ItemStack stick2 = getMaurerStick(p);
 		// Flieger
-		ItemStack stick3 = new ItemStack(Material.STICK);
-		ItemMeta stick3Meta = stick3.getItemMeta();
-		stick3Meta.setDisplayName("§7Vogelbein");
-		stick3Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick3.setItemMeta(stick3Meta);
-		ItemStack flieger = new ItemStack(Material.FEATHER);
-		ItemMeta fliegerMeta = flieger.getItemMeta();
-		fliegerMeta.setDisplayName("§7Flieger");
-		if (deutsch(p))
-			fliegerMeta.setLore(
-					Arrays.asList("§4Preis: 700 Coins", "Rechtsklicke die Feder um für 3 Sekunden zu fliegen."));
-		else
-			fliegerMeta.setLore(
-					Arrays.asList("§4Price: 700 Coins", "Rightclick the feather to fly for 3 seconds."));
-		flieger.setItemMeta(fliegerMeta);
+		ItemStack stick3 = getFliegerStick(p);
+		ItemStack flieger = getFlieger(p);
 		// Enterhaken
-		ItemStack haken = new ItemStack(Material.FISHING_ROD);
-		ItemMeta hakenMeta = haken.getItemMeta();
-		hakenMeta.setDisplayName("§7Enterhaken");
-		if (deutsch(p))
-			hakenMeta.setLore(Arrays.asList("§4Preis: 900 Coins"));
-		else
-			hakenMeta.setLore(Arrays.asList("§4Price: 900 Coins"));
-		haken.setItemMeta(hakenMeta);
-		ItemStack stick4 = new ItemStack(Material.STICK);
-		ItemMeta stick4Meta = stick4.getItemMeta();
-		stick4Meta.setDisplayName("§7Enterhaken Kit");
-		stick4Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick4.setItemMeta(stick4Meta);
+		ItemStack haken = getHaken(p);
+		ItemStack stick4 = getHakenStick(p);
 		try {
 			switch (kit) {
 			case "knockback+":
@@ -485,15 +331,7 @@ public class KitsChooseMenu implements Listener {
 				break;
 			case "error":
 				p.getInventory().clear();
-				ItemStack chest = new ItemStack(Material.CHEST);
-				ItemMeta chestMeta = chest.getItemMeta();
-				chestMeta.setDisplayName("§6§lKits");
-				chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-				if (deutsch(p))
-					chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-				else
-					chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-				chest.setItemMeta(chestMeta);
+				ItemStack chest = getKitsChest(p);
 				p.getInventory().setItem(4, chest);
 				break;
 			default:
@@ -504,15 +342,7 @@ public class KitsChooseMenu implements Listener {
 			}
 		} catch (Exception e) {
 			p.getInventory().clear();
-			ItemStack chest = new ItemStack(Material.CHEST);
-			ItemMeta chestMeta = chest.getItemMeta();
-			chestMeta.setDisplayName("§6§lKits");
-			chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-			if (deutsch(p))
-				chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-			else
-				chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-			chest.setItemMeta(chestMeta);
+			ItemStack chest = getKitsChest(p);
 			p.getInventory().setItem(4, chest);
 		}
 	}
@@ -521,65 +351,23 @@ public class KitsChooseMenu implements Listener {
 		try {
 		} catch (Exception e) {
 			p.getInventory().clear();
-			ItemStack chest = new ItemStack(Material.CHEST);
-			ItemMeta chestMeta = chest.getItemMeta();
-			chestMeta.setDisplayName("§6§lKits");
-			chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-			if (deutsch(p))
-				chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-			else
-				chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-			chest.setItemMeta(chestMeta);
+			ItemStack chest = getKitsChest(p);
 			p.getInventory().setItem(4, chest);
 			return;
 		}
 		// Standard
-		ItemStack stick = new ItemStack(Material.STICK);
-		ItemMeta stickMeta = stick.getItemMeta();
-		stickMeta.setDisplayName("§7Standard");
-		stickMeta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick.setItemMeta(stickMeta);
+		ItemStack stick = getStick(p);
 		// Knockback+
-		ItemStack stickplus = new ItemStack(Material.STICK);
-		ItemMeta stickplusMeta = stickplus.getItemMeta();
-		stickplusMeta.setDisplayName("§7Knockback+");
-		stickplusMeta.addEnchant(Enchantment.KNOCKBACK, 2, true);
-		if (deutsch(p))
-			stickplusMeta.setLore(Arrays.asList("§4Preis: 400 Coins"));
-		else
-			stickplusMeta.setLore(Arrays.asList("§4Price: 400 Coins"));
-		stickplus.setItemMeta(stickplusMeta);
+		ItemStack stickplus = getStickPlus(p);
 		// Maurer
-		ItemStack maurer = new ItemStack(Material.BRICK);
-		ItemMeta maurerMeta = maurer.getItemMeta();
-		maurerMeta.setDisplayName("§7Maurer");
-		maurer.setAmount(32);
-		if (deutsch(p))
-			maurerMeta.setLore(Arrays.asList("§4Preis: 500 Coins"));
-		else
-			maurerMeta.setLore(Arrays.asList("§4Price: 500 Coins"));
-		maurer.setItemMeta(maurerMeta);
-		ItemStack stick2 = new ItemStack(Material.STICK);
-		ItemMeta stick2Meta = stick2.getItemMeta();
-		stick2Meta.setDisplayName("§7Maurerkelle");
-		stick2Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick2.setItemMeta(stick2Meta);
+		ItemStack maurer = getMaurer(p);
+		ItemStack stick2 = getMaurerStick(p);
 		// Flieger
-		ItemStack stick3 = new ItemStack(Material.STICK);
-		ItemMeta stick3Meta = stick3.getItemMeta();
-		stick3Meta.setDisplayName("§7Vogelbein");
-		stick3Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
-		stick3.setItemMeta(stick3Meta);
-		ItemStack flieger = new ItemStack(Material.FEATHER);
-		ItemMeta fliegerMeta = flieger.getItemMeta();
-		fliegerMeta.setDisplayName("§7Flieger");
-		if (deutsch(p))
-			fliegerMeta.setLore(
-					Arrays.asList("§4Preis: 700 Coins", "Rechtsklicke die Feder um für 3 Sekunden zu fliegen."));
-		else
-			fliegerMeta.setLore(
-					Arrays.asList("§4Price: 700 Coins", "Rightclick the feather to fly for 3 seconds."));
-		flieger.setItemMeta(fliegerMeta);
+		ItemStack stick3 = getFliegerStick(p);
+		ItemStack flieger = getFlieger(p);
+		// Enterhaken
+		ItemStack haken = getHaken(p);
+		ItemStack stick4 = getHakenStick(p);
 		try {
 			switch (kit) {
 			case "knockback+":
@@ -599,17 +387,15 @@ public class KitsChooseMenu implements Listener {
 				p.getInventory().setItem(0, stick3);
 				p.getInventory().setItem(1, flieger);
 				break;
+			case "enterhaken":
+				p.closeInventory();
+				p.getInventory().clear();
+				p.getInventory().setItem(0, stick4);
+				p.getInventory().setItem(1, haken);
+				break;
 			case "error":
 				p.getInventory().clear();
-				ItemStack chest = new ItemStack(Material.CHEST);
-				ItemMeta chestMeta = chest.getItemMeta();
-				chestMeta.setDisplayName("§6§lKits");
-				chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-				if (deutsch(p))
-					chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-				else
-					chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-				chest.setItemMeta(chestMeta);
+				ItemStack chest = getKitsChest(p);
 				p.getInventory().setItem(4, chest);
 				break;
 			default:
@@ -620,15 +406,7 @@ public class KitsChooseMenu implements Listener {
 			}
 		} catch (Exception e) {
 			p.getInventory().clear();
-			ItemStack chest = new ItemStack(Material.CHEST);
-			ItemMeta chestMeta = chest.getItemMeta();
-			chestMeta.setDisplayName("§6§lKits");
-			chestMeta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 10, true);
-			if (deutsch(p))
-				chestMeta.setLore(Arrays.asList("Rechtsklicke um dein Kit auszuwählen"));
-			else
-				chestMeta.setLore(Arrays.asList("Rightclick to choose your Kit"));
-			chest.setItemMeta(chestMeta);
+			ItemStack chest = getKitsChest(p);
 			p.getInventory().setItem(4, chest);
 		}
 	}

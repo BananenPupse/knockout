@@ -31,7 +31,7 @@ public class Villager implements CommandExecutor {
 					v.setCustomNameVisible(true);
 					v.setAgeLock(true);
 					v.setProfession(Profession.PRIEST);
-					NoAI.setAIEnabled(v, false);
+					NoAI.setAI(v, false);
 				}
 				if (args[0].equalsIgnoreCase("shop")) {
 					org.bukkit.entity.Villager v = (org.bukkit.entity.Villager) p.getWorld()
@@ -40,7 +40,7 @@ public class Villager implements CommandExecutor {
 					v.setCustomNameVisible(true);
 					v.setAgeLock(true);
 					v.setProfession(Profession.PRIEST);
-					NoAI.setAIEnabled(v, false);
+					NoAI.setAI(v, false);
 				}
 			}
 			if (command.getName().equalsIgnoreCase("removevillager")) {
