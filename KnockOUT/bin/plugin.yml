@@ -1,0 +1,57 @@
+name: KnockOUT
+version: 4.3
+main: de.kevin.knockout.main.Main
+
+author: BananenPupse
+depend: [Multiverse-Core]
+
+commands:
+  kit:
+    description: get kit chooser
+  createarena:
+    description: create a arena
+    permission: knockout.admin
+  setpos:
+    description: set positions of a arena
+    permission: knockout.admin
+  mapchange:
+    description: change the map
+    permission: knockout.mapchange
+  stats:
+    description: see stats of a player
+  randommap:
+    description: switch to a random map
+    permission: knockout.mapchange
+  maps:
+    description: see all available maps
+    permission: knockout.mapchange
+  build:
+    description: switch you build mode
+    permission: knockout.build
+  setkills:
+    description: set players kills
+    permission: knockout.admin
+  setdeaths:
+    description: set players deaths
+    permission: knockout.admin
+  setcoins:
+    description: set players coins
+    permission: knockout.admin
+  mapswitchstart:
+    description: start the map switch timer
+    permission: knockout.admin
+  mapswitchstop:
+    description: stop the map switch timer
+    permission: knockout.admin
+  createvillager:
+    description: create a villager
+    permission: knockout.admin
+  removevillager:
+    description: remove a villager
+    permission: knockout.admin
+  shop:
+    description: open the shop
+  top10:
+    description: see the top 10
+  knockout:
+    description: see help
